@@ -88,12 +88,21 @@ socket.on('connect', () => {
 	console.log(chalk.red('== Client Connected =='))
 })
 
+socket.on('ping', function(callback) {
+	console.log("Received pong request from server");
+	const userID = clinfo[0];
+	const pong = "pong";
+	socket.emit("pong", { userID, pong} );
+})
+
 socket.on('joined', (data) => {
 	const {userID, IDs} = data;
 	console.log(IDs);
 	users.push(userID);
 	console.log(users);
 	console.log(chalk.green("Info: User ["+ userID +"] joined"));
+
+	socket.emit("ping");
 })
 
 socket.on('disc', (data) => {
@@ -189,9 +198,9 @@ repl.start({
 			
 		} else if (message.includes("!quit") & !message.includes("DM@")) {
 		
-			chalk.green(console.log("Info: Quitting..."));
 			var myID = clinfo[0];
 			socket.emit('disc', myID);
+			socket.close();
 			process.exit(1);
 
 		} else {

@@ -34,6 +34,26 @@ io.on('connection', (socket) => {
 	var port = socket.request.connection._peername.port;
 
 	socket.join(socket.id);
+
+//	socket.on('ping', (data) => {
+			var ping = ping;
+			console.log("Pong request to all sockets.... ");
+		        setInterval(() => { socket.emit('ping', ping)
+	}, 30 * 1000);
+
+//	});
+
+	socket.on('pong', (data) => {
+		const {userID, pong} = data;
+		console.log(data);
+		if (pong.includes("pong")) {
+			console.log("OK");
+	
+		} else {
+			socket.close();
+		}
+
+	});
 	
 	socket.on('joined', (data) => {
 
@@ -53,7 +73,17 @@ io.on('connection', (socket) => {
 		console.log(newIDs);
 		IDs = [];
 		IDs = IDs.concat(newIDs);
-		console.log("New list of IDs: "+ IDs);		
+		console.log("New list of IDs: "+ IDs);	
+		const delid = parseInt(userID);
+		console.log(delid)
+//		let clients = users.filter(function(e) { return e !== delid });
+//                let sender = users.find(client => client.IDno == fromID);
+
+		let clients = users.filter(client => client.IDno !== delid);
+
+		console.log(clients);
+		users = [];
+		users = users.concat(clients);
 
 		socket.broadcast.emit('disc', {userID, IDs})
         });
@@ -70,7 +100,7 @@ io.on('connection', (socket) => {
 			IDs.push(userID);
 		
 			socket.emit('getid', {userID, IDs});
-		} else {
+		} else if (IDs.includes(newUserID)) {
 			console.log(chalk.red("User ID already in use..."));
 			}
 	});
