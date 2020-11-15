@@ -70,6 +70,7 @@ function decipherText(ciphertext, password) {
 
 var id = socket.id;
 
+
 socket.on('disconnect', function() {
 	console.log(chalk.yellow("Disconnecting from server"));
 	var myID = clinfo[0]
@@ -84,30 +85,40 @@ socket.on('connect', () => {
 
 	socket.emit('xchange', pubKey)
 
-	console.log(chalk.red('== start chat =='))
+	console.log(chalk.red('== Client Connected =='))
 })
 
 socket.on('joined', (data) => {
 	const {userID, IDs} = data;
+	console.log(IDs);
 	users.push(userID);
 	console.log(users);
-	console.log(chalk.green("User ["+ userID +"] joined"));
+	console.log(chalk.green("Info: User ["+ userID +"] joined"));
 })
 
 socket.on('disc', (data) => {
-	const myID = data;
-	const userID = myID;
-	console.log(chalk.green("User ["+ userID +"] joined"));
+	const {userID,IDs} = data;
+//	var newUsers = users.filter(function(e) { return e !== userID })
+//	console.log(newUsers);
+//	users = [];
+//	users.concat(newUsers);	
+	users = [];
+	users.concat(IDs);
+	console.log(chalk.red(IDs));
+	console.log(chalk.green("User ["+ userID +"] left"));
 	
 })
 
-
 socket.on('getid', (data) => {
-	const userID = data;
+	const {userID, IDs} = data;
+	users = [];
+	users = users.concat(IDs);
+	console.log("Current online users: " + users); 
 	var myID = userID;
 	console.log("Your ID is: "+ myID);
 	clinfo.push(myID);
-	users.push(myID);
+	//users.push(myID);
+
 	console.log("Your session pass is: "+ password);
 	socket.emit('joined', myID)
 });
@@ -147,13 +158,7 @@ socket.on('decry', (data) => {
 
 socket.on('message', (data) => {
 	const { message, cliID } = data;
-	console.log(chalk.green(cliID + ': ' + message.split('\n')[0]));
-})
-
-socket.on('userJoined', (data) => {
-	const { userIDs } = data;
-	console.log(userIDs);
-
+	console.log(chalk.yellow(cliID + ': ' + message.split('\n')[0]));
 })
 
 repl.start({
@@ -164,9 +169,10 @@ repl.start({
 		if (message.includes("DM@") & !message.includes("!quit")) {
 			const myRe = /(?<=\@)(.*?)(?=\:)/g
 			const recip = myRe.exec(message);
-			var recipID = recip[0];
+			var recipID = parseInt(recip[0]);
 			console.log(recipID);
-			debug(users);
+			console.log(users);
+
 			if (users.includes(recipID)) {
 				console.log(users.includes(recipID));
 				var msg = message.split(/DM@\d{1,4}:/);
@@ -183,7 +189,7 @@ repl.start({
 			
 		} else if (message.includes("!quit") & !message.includes("DM@")) {
 		
-			console.log("User quitting...");
+			chalk.green(console.log("Info: Quitting..."));
 			var myID = clinfo[0];
 			socket.emit('disc', myID);
 			process.exit(1);

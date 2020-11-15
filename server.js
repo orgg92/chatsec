@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 const http = require('http').createServer()
-const io = require('socket.io')(http)
+const io = require('socket.io')(http, {pingTimeout: 12000, pingInterval: 5000})
 const port = 9898
 
 function debug(input) {
@@ -45,26 +45,34 @@ io.on('connection', (socket) => {
 
 	});
 
-	
         socket.on('disc', function(data) {
 
                 const myID = data;
-		socket.broadcast.emit('disc', myID)
+		const userID = myID;
+		var newIDs = IDs.filter(function(e) { return e !== userID })
+		console.log(newIDs);
+		IDs = [];
+		IDs = IDs.concat(newIDs);
+		console.log("New list of IDs: "+ IDs);		
 
+		socket.broadcast.emit('disc', {userID, IDs})
         });
 
-
 	socket.on('xchange', function(pubKey) {
+		var newUserID = sockGen()
+		if (!IDs.includes(newUserID)) {
+			users.push(new Client(newUserID, address, port, socket.id, pubKey));
+		        console.log(users[i].IDno + '@' + users[i].IP +':' + users[i].port + ' connected')
+		        console.log(users);
+			var userID = users[i].IDno;
+			i = i+1;
 
-		users.push(new Client(sockGen(), address, port, socket.id, pubKey));
-	        console.log(users[i].IDno + '@' + users[i].IP +':' + users[i].port + ' connected')
-	        console.log(users);
-		var userID = users[i].IDno;
-		i = i+1;
-
-		IDs.push(userID);
+			IDs.push(userID);
 		
-		socket.emit('getid', userID);
+			socket.emit('getid', {userID, IDs});
+		} else {
+			console.log(chalk.red("User ID already in use..."));
+			}
 	});
 
 	socket.on('message', (evt) => {
@@ -73,15 +81,12 @@ io.on('connection', (socket) => {
 	
 	socket.on('dm', function(data) {
 		const {recipID, fromID, recipKey, encPW, encMsg} = data;
-// changed to fromID from recipID
 		let recip = users.find(client => client.IDno == recipID);
 		let sender = users.find(client => client.IDno == fromID);
 
-                if (recip.sockID == "undefined") {
+                if (recip.sockID == undefined) {
                         console.log("Recipient is unknown");
-		
                 } else {
-
 			let recipsocket = recip.sockID;
 			io.to(recipsocket).emit("dm", {recipID, fromID, recipKey, encPW, encMsg});
 		}
@@ -100,7 +105,6 @@ io.on('connection', (socket) => {
 	socket.on('recipKey', function(data) { 
 
 		const {recipID, cliID} = data;
-
 		let user = users.find(client => client.IDno == recipID);
 		
 		recipsocket = user.sockID;
