@@ -27,6 +27,27 @@ console.log(`server listening on ${port}`)
 });
 
 io.on('connection', (socket) => {
+	setInterval(() => {
+		var sockets = io.sockets.adapter.rooms;
+		console.log(users);
+
+                let inc = 0;
+		for (inc = 0; inc < users.length; inc++) {
+			console.log(users[inc].sockID);
+			let check = sockets.has(users[inc].sockID);
+			
+			if (check == true) {
+				console.log("Doing nothing")
+			} else {
+				let newUsers = users.filter(user => users.sockID !== check)
+				users = [];
+				users = users.concat(newUsers);
+			}
+		}
+		
+
+		
+	}, 5 * 1000);
 
 	var address = socket.request.connection.remoteAddress;
 	var port = socket.request.connection._peername.port;
@@ -61,14 +82,12 @@ io.on('connection', (socket) => {
 		var newUserID = sockGen()
 		if (!IDs.includes(newUserID)) {
 			users.push(new Client(newUserID, address, port, socket.id, pubKey));
-		        console.log(users);
 
 			let userID = users.find(client => client.sockID === socket.id);
 			userID = userID.IDno;
 			console.log(userID);
 
 			IDs.push(userID);
-			console.log(IDs);
 		
 			socket.emit('getid', {userID, IDs});
 		} else if (IDs.includes(newUserID)) {

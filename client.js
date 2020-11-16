@@ -90,9 +90,9 @@ socket.on('connect', () => {
 
 socket.on('joined', (data) => {
 	const {userID, IDs} = data;
-	console.log(IDs);
+//	console.log(IDs);
 	users.push(userID);
-	console.log(users);
+//	console.log(users);
 	console.log(chalk.green("Info: User ["+ userID +"] joined"));
 
 })
@@ -102,7 +102,6 @@ socket.on('disc', (data) => {
 
 	users = [];
 	users.concat(IDs);
-	console.log(chalk.red(IDs));
 	console.log(chalk.green("User ["+ userID +"] left"));
 	
 })
@@ -115,7 +114,6 @@ socket.on('getid', (data) => {
 	var myID = userID;
 	console.log("Your ID is: "+ myID);
 	clinfo.push(myID);
-	//users.push(myID);
 
 	console.log("Your session pass is: "+ password);
 	socket.emit('joined', myID)
@@ -167,28 +165,32 @@ repl.start({
 		if (message.includes("DM@") & !message.includes("!quit")) {
 			const myRe = /(?<=\@)(.*?)(?=\:)/g
 			const recip = myRe.exec(message);
-			var recipID = parseInt(recip[0]);
-			console.log(recipID);
-			console.log(users);
 
-			if (users.includes(recipID)) {
+                        if (recip == null) {
+                                console.log(chalk.red("Invalid syntax"));
+                        } else {
+				var recipID = parseInt(recip[0]);
+//				console.log(recipID);
+//				console.log(users);
+	
+	                        var msg = message.split(/DM@\d{1,4}:/);
+	                        msg = msg[1];
+				myMsg = msg;
+			
+
+			if (users.includes(recipID) & myMsg.length > 0) {
 				console.log(users.includes(recipID));
-				var msg = message.split(/DM@\d{1,4}:/);
-				msg = msg[1];
 				const pubKey = keys.pubKey;
 				socket.emit('recipKey', {cliID, recipID});
 
-				myMsg = msg;
 			} else if (!users.includes(recipID)) { 
 				console.log(chalk.red("User not online"));
-				console.log(users.includes(recipID));
-				console.log(recipID);
 			}
+		}
 			
 		} else if (message.includes("!quit") & !message.includes("DM@")) {
 		
 			var myID = clinfo[0];
-			socket.emit('disc', myID);
 			socket.close();
 			process.exit(1);
 
