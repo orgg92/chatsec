@@ -7,7 +7,6 @@ function debug(input) {
         console.log(chalk.red(input));
 }
 
-
 function sockGen() {
 	return Math.floor(Math.random() * Math.floor(9999));
 };
@@ -27,46 +26,22 @@ http.listen(port, '0.0.0.0', function() {
 console.log(`server listening on ${port}`)
 });
 
-let i = 0;
-
 io.on('connection', (socket) => {
+
 	var address = socket.request.connection.remoteAddress;
 	var port = socket.request.connection._peername.port;
 
 	socket.join(socket.id);
 
-//	socket.on('ping', (data) => {
-			var ping = ping;
-			console.log("Pong request to all sockets.... ");
-		        setInterval(() => { socket.emit('ping', ping)
-	}, 30 * 1000);
-
-//	});
-
-	socket.on('pong', (data) => {
-		const {userID, pong} = data;
-		console.log(data);
-		if (pong.includes("pong")) {
-			console.log("OK");
-	
-		} else {
-			socket.close();
-		}
-
-	});
-	
 	socket.on('joined', (data) => {
-
 		const myID = data;
 		const userID = myID;
 		console.log(userID);
-		
+		console.log(IDs);
 		socket.broadcast.emit('joined', {userID, IDs})
-
 	});
 
         socket.on('disc', function(data) {
-
                 const myID = data;
 		const userID = myID;
 		var newIDs = IDs.filter(function(e) { return e !== userID })
@@ -75,34 +50,30 @@ io.on('connection', (socket) => {
 		IDs = IDs.concat(newIDs);
 		console.log("New list of IDs: "+ IDs);	
 		const delid = parseInt(userID);
-		console.log(delid)
-//		let clients = users.filter(function(e) { return e !== delid });
-//                let sender = users.find(client => client.IDno == fromID);
-
 		let clients = users.filter(client => client.IDno !== delid);
-
-		console.log(clients);
 		users = [];
 		users = users.concat(clients);
 
 		socket.broadcast.emit('disc', {userID, IDs})
-        });
+        }); 
 
 	socket.on('xchange', function(pubKey) {
 		var newUserID = sockGen()
 		if (!IDs.includes(newUserID)) {
 			users.push(new Client(newUserID, address, port, socket.id, pubKey));
-		        console.log(users[i].IDno + '@' + users[i].IP +':' + users[i].port + ' connected')
 		        console.log(users);
-			var userID = users[i].IDno;
-			i = i+1;
+
+			let userID = users.find(client => client.sockID === socket.id);
+			userID = userID.IDno;
+			console.log(userID);
 
 			IDs.push(userID);
+			console.log(IDs);
 		
 			socket.emit('getid', {userID, IDs});
 		} else if (IDs.includes(newUserID)) {
 			console.log(chalk.red("User ID already in use..."));
-			}
+		}
 	});
 
 	socket.on('message', (evt) => {
@@ -142,6 +113,28 @@ io.on('connection', (socket) => {
 
 		socket.emit('getKey', {recipKey, recipID});
 		console.log(recipKey);
+	});
+
+	socket.on('disconnect', function(data) {
+
+		let clients = users.filter(client => client.sockID !== socket.id);
+		let user = users.find(client => client.sockID == socket.id);
+
+		userID = parseInt(user.IDno);
+		console.log(chalk.yellow("UserID leaving is "+ userID));
+
+                var newIDs = IDs.filter(function(e) { return e !== userID })
+
+                console.log(newIDs);
+                IDs = [];
+                IDs = IDs.concat(newIDs);
+                console.log("New list of IDs: "+ IDs);
+		console.log(socket.id + "  disconnected");
+
+                users = [];
+                users = users.concat(clients);
+		socket.broadcast.emit('disc', {userID, IDs});
+
 	});
 	
 })

@@ -88,13 +88,6 @@ socket.on('connect', () => {
 	console.log(chalk.red('== Client Connected =='))
 })
 
-socket.on('ping', function(callback) {
-	console.log("Received pong request from server");
-	const userID = clinfo[0];
-	const pong = "pong";
-	socket.emit("pong", { userID, pong} );
-})
-
 socket.on('joined', (data) => {
 	const {userID, IDs} = data;
 	console.log(IDs);
@@ -102,15 +95,11 @@ socket.on('joined', (data) => {
 	console.log(users);
 	console.log(chalk.green("Info: User ["+ userID +"] joined"));
 
-	socket.emit("ping");
 })
 
 socket.on('disc', (data) => {
 	const {userID,IDs} = data;
-//	var newUsers = users.filter(function(e) { return e !== userID })
-//	console.log(newUsers);
-//	users = [];
-//	users.concat(newUsers);	
+
 	users = [];
 	users.concat(IDs);
 	console.log(chalk.red(IDs));
