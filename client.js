@@ -1,4 +1,4 @@
-var socket = require('socket.io-client')('http://172.16.1.222:9898');
+var socket = require('socket.io-client')('http://127.0.0.1:9898');
 const repl = require('repl');
 const chalk = require('chalk');
 var username = null;
@@ -90,9 +90,7 @@ socket.on('connect', () => {
 
 socket.on('joined', (data) => {
 	const {userID, IDs} = data;
-//	console.log(IDs);
 	users.push(userID);
-//	console.log(users);
 	console.log(chalk.green("Info: User ["+ userID +"] joined"));
 
 })
@@ -170,9 +168,6 @@ repl.start({
                                 console.log(chalk.red("Invalid syntax"));
                         } else {
 				var recipID = parseInt(recip[0]);
-//				console.log(recipID);
-//				console.log(users);
-	
 	                        var msg = message.split(/DM@\d{1,4}:/);
 	                        msg = msg[1];
 				myMsg = msg;
